@@ -34,12 +34,20 @@ import org.testng.annotations.Test;
 
 import static org.jboss.test.selenium.locator.LocatorFactory.*;
 import static org.jboss.test.selenium.guard.request.RequestTypeGuardFactory.*;
+import org.jboss.test.selenium.encapsulated.JavaScript;
 import org.jboss.test.selenium.locator.Attribute;
 import org.jboss.test.selenium.locator.AttributeLocator;
 import org.jboss.test.selenium.locator.XpathLocator;
 import org.jboss.test.selenium.locator.IdLocator;
 import org.jboss.test.selenium.framework.AjaxSelenium;
+import org.jboss.test.selenium.framework.AjaxSeleniumImpl;
+import org.jboss.test.selenium.framework.AjaxSeleniumProxy;
 import org.jboss.test.selenium.guard.request.RequestTypeGuardFactory;
+import org.jboss.test.selenium.locator.ElementLocationStrategy;
+
+import static org.jboss.test.selenium.encapsulated.JavaScript.fromResource;
+import static org.jboss.test.selenium.utils.URLUtils.buildUrl;
+import static org.jboss.test.selenium.SystemProperties.*;
 
 /**
  * This class tests Weld numberguess example in a cluster. Two instances of JBoss AS are
@@ -87,29 +95,41 @@ public class NumberGuessClusteringTest extends AbstractTestCase
    private final String SECOND_INSTANCE_BROWSER_URL = "http://localhost:8180";
    private final long JBOSS_SHUTDOWN_TIMEOUT = 20000;
    
-   String jboss = System.getProperty("JBOSS_HOME");
-      
-   //private AjaxSelenium browser2;
+   // String jboss = System.getProperty("JBOSS_HOME");
+   {
+      System.out.println("[DEBUG] " + System.getProperty("JBOSS_HOME"));
+   }
+   protected String jboss = "/home/plenyi/dev/server/jboss/jboss-6.0.0-SNAPSHOT-pmuir/";
+   
+   private String localContextPath = "";
 
    @BeforeMethod
    public void openStartURL() throws MalformedURLException 
    {
-       selenium.open(new URL(contextPath.toString() + MAIN_PAGE));
+      selenium.open(new URL(contextPath.toString() + MAIN_PAGE));
    }
 
    @Test
    public void guessingWithFailoverTest() throws MalformedURLException
    {
-	  preFailurePart();
+      preFailurePart();
 	   
       String newAddress = getAddressForSecondInstance();
-       
-      shutdownMasterJBossInstance();
-
+      
       /* stop and start browser -> simulate different web browser with different session */
       super.finalizeBrowser();
-      super.initializeBrowser();
-      selenium.open(new URL(newAddress));
+      shutdownMasterJBossInstance();
+      initializeSecondBrowser();
+      try {
+         super.initializeExtensions();
+      }
+      catch (IOException ex) {
+         throw new RuntimeException(ex);
+      }
+      
+      System.out.println("[DEBUG] " + SECOND_INSTANCE_BROWSER_URL + newAddress);
+      
+      selenium.open(new URL(SECOND_INSTANCE_BROWSER_URL + newAddress));
 
       assertTrue(selenium.isTextPresent(HIGHER_MSG), "Page should contain message Higher!");
       assertEquals(Integer.parseInt(selenium.getText(GUESS_SMALLEST)),4, "Page should contain smallest number equal to 4");
@@ -154,11 +174,11 @@ public class NumberGuessClusteringTest extends AbstractTestCase
 	   selenium.deleteAllVisibleCookies();
 	   
 	   while (isOnGuessPage())
-       {
-		 /*3+8 = 11  -> even though we have 10 attempts, it is possible to enter value 11 times, but
+      {
+		/*3+8 = 11  -> even though we have 10 attempts, it is possible to enter value 11 times, but
 		 the 11th time it is actually not guessing but only validating that 10 times has gone and the game
 		 is finished (no 11th guessing)*/
-		 if (i >= 8)
+      if (i >= 8)
          {
             fail("Game should not be longer than 7 guesses in the second selenium after failover");
          }
@@ -204,38 +224,39 @@ public class NumberGuessClusteringTest extends AbstractTestCase
    
    public String getAddressForSecondInstance()
    {
-	  String loc = selenium.getLocation().toString(); 
+      String loc = selenium.getLocation().toString();
       String[] parsedStrings = loc.split("/");
+      localContextPath = "/" + parsedStrings[3] + "/";
       StringBuilder sb = new StringBuilder();
-      for (int i = 3; i != parsedStrings.length; i++){
+      for (int i = 3; i < parsedStrings.length; i++){
          sb.append("/").append(parsedStrings[i]);
-      }      
-      
-      String sid = "";
-      
-      /* ---------- uncomment this when richfaces-selenium updates propagate to no-SNAPSHOT version ------
-      if (selenium.isCookiePresent("JSESSIONID"))
-      {
-    	   sid = selenium.getCookieByName("JSESSIONID").getValue();  
       }
-      else 
-      {    	  
-    	   //get sessionid directly from browser URL if JSESSIONID cookie is not present
-    	   sid = loc.substring(loc.indexOf("jsessionid=") + "jsessionid=".length(), loc.length());
-      }*/
       
       String newAddress = sb.toString();
-      String firstPart = newAddress.substring(0, newAddress.indexOf(";"));
-
+      String firstPart = "";
+      String sid = "";
+      
+      if (selenium.isCookiePresent("JSESSIONID"))
+      {
+         firstPart = newAddress;
+         sid = selenium.getCookieByName("JSESSIONID").getValue();
+      }
+      else 
+      {
+         //get sessionid directly from browser URL if JSESSIONID cookie is not present
+         firstPart = newAddress.substring(0, newAddress.indexOf(";"));
+         sid = loc.substring(loc.indexOf("jsessionid=") + "jsessionid=".length(), loc.length());
+      }
       
       newAddress = firstPart + ";jsessionid=" + sid;
-   
-      return newAddress;      
+      
+      return newAddress;
    }
       
    public void shutdownMasterJBossInstance()
    {
-	  String command = jboss + "/bin/shutdown.sh -s localhost:1099 -S";
+      String command = jboss + "bin/shutdown.sh -s localhost:1099 -S";
+      System.out.println("[DEBUG] " + command);
       try
       {
          Process process = Runtime.getRuntime().exec(command);
@@ -249,5 +270,32 @@ public class NumberGuessClusteringTest extends AbstractTestCase
       catch (InterruptedException e)
       {
       }
+   }
+   
+   public void initializeSecondBrowser() {
+      selenium = new AjaxSeleniumImpl(getSeleniumHost(), getSeleniumPort(), browser, buildUrl(SECOND_INSTANCE_BROWSER_URL, localContextPath));
+      AjaxSeleniumProxy.setCurrentContext(selenium);
+
+      selenium.enableNetworkTrafficCapturing(isSeleniumNetworkTrafficEnabled());
+      selenium.start();
+     
+      loadCustomLocationStrategies();
+     
+      selenium.setSpeed(getSeleniumSpeed());
+     
+      if (isSeleniumMaximize()) {
+         // focus and maximaze tested window
+         selenium.windowFocus();
+         selenium.windowMaximize();
+      }
+   }
+   
+   /**
+     * Uses selenium.addLocationStrategy to implement own strategies to locate items in the tested page
+     */
+   private void loadCustomLocationStrategies() {
+      // jQuery location strategy
+      JavaScript strategySource = fromResource("javascript/selenium-location-strategies/jquery-location-strategy.js");
+      selenium.addLocationStrategy(ElementLocationStrategy.JQUERY, strategySource);
    }
 }
