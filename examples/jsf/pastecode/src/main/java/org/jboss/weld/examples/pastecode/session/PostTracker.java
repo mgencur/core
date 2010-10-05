@@ -31,7 +31,14 @@ public class PostTracker
    
    public boolean isNewPostAllowed()
    {
-      if (posts.size() > 2)
+	  
+	  return true; //added
+     
+     /* change for performance purposes when application is under load
+	   * 
+	   *  
+	   *     
+	  if (posts.size() > 2)
       {
          long diff = new Date().getTime() - posts.get(2).getTime();
          return diff > 20 * 1000;
@@ -40,6 +47,7 @@ public class PostTracker
       {
          return true;
       }
+      */
    }
 
 }

@@ -57,21 +57,26 @@ public class CodeFragment
 
    @Id
    @GeneratedValue(strategy = AUTO)
-   @Column(name = "id")
+   @Column(name = "codeid")
    private int id;
 
    @Temporal(TemporalType.TIMESTAMP)
+   @Column(name = "pastetime")
    private Date datetime;
 
    @Enumerated(EnumType.STRING)
+   @Column(name = "codelanguage")
    private Language language;
 
    @Lob
    @Size(min=1, message="Must enter some text!")
+   @Column(name = "content")
    private String text;
 
+   @Column(name = "nick")
    private String user;
 
+   @Column(name = "codehash")
    private String hash;
 
    public int getId()

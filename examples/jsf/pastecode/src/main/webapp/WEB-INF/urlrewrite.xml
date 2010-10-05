@@ -11,7 +11,7 @@
    
    <!-- first construct nice address (ending with number, e.g. /0532106545) and show it in URL field-->  
    <rule>
-       <from>^/(\w{6})\.jsf$</from>
+       <from>^/(\w{40})\.jsf$</from>
        <to type="redirect" last="true">/weld-pastecode/$1</to>       
    </rule> 
    
@@ -22,7 +22,7 @@
    
    <!-- then forward to appropriate page without changing displayed URL -->
    <rule>
-       <from>^/(\w{6})$</from>
+       <from>^/(\w{40})$</from>
        <to type="forward" last="true">display.jsf?id=$1</to>
    </rule> 
    

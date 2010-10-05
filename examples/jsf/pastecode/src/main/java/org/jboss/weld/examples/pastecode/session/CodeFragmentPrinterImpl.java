@@ -34,7 +34,12 @@ public class CodeFragmentPrinterImpl implements CodeFragmentPrinter
    @Timeout
    public void print()
    {
-      // Print the code fragments retrieved in the last minute to the log
+	   /* Commented out for performance pusposes (logging is not desired)
+	    * 
+	    * 
+	    *
+       *
+	   // Print the code fragments retrieved in the last minute to the log
       if (logger.getLog().size() > 0)
       {
          log.info("These code fragments pasted in the last minute: ");
@@ -48,7 +53,7 @@ public class CodeFragmentPrinterImpl implements CodeFragmentPrinter
       else
       {
          log.info("No fragments pasted in the last minute");
-      }
+      }*/
    }
 
 }

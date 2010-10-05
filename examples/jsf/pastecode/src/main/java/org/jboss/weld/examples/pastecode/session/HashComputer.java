@@ -53,6 +53,11 @@ public class HashComputer
    {
       StringBuilder strBuf = new StringBuilder(buf.length * 2);
 
+      /* For performance tests the hash has to be longer than 6 letters -> changing to 40 characters
+       * because performance test inserts the same text (from which the hash is made) with just a 
+       * little change -> need for the hash to be unique in a database
+       *
+       * 
       // make sure it contains a letter!
       strBuf.append("h");
       
@@ -61,8 +66,8 @@ public class HashComputer
          if ((buf[i] & 0xff) < 0x10)
          {
             strBuf.append("0");
+            strBuf.append(Long.toString(buf[i] & 0xff, 16));
          }
-         strBuf.append(Long.toString(buf[i] & 0xff, 16));
       }
       if (strBuf.length() <= 6)
       {
@@ -72,6 +77,17 @@ public class HashComputer
          }
       }
       return strBuf.toString().substring(0, 6);
+      */
+
+      for (int i = 0; i < buf.length; i++)
+      {
+         if (((int) buf[i] & 0xff) < 0x10)
+            strBuf.append("0");
+         strBuf.append(Long.toString((int) buf[i] & 0xff, 16));
+      }
+
+      return strBuf.toString();
+      
    }
 
 }
