@@ -23,12 +23,20 @@ import javax.inject.Named;
 
 @Named
 @RequestScoped
-class Foo implements Serializable
+class Foo implements Serializable, Bar
 {
-   
-   public String getMsg()
+   public static final String MESSAGE = "Hi";
+
+   public String getRealMsg(int param1, long param2, double param3, boolean param4, char param5, float param7, short param8)
    {
-      return "Hi";
+      return MESSAGE;
+   }
+
+   // test all primitive parameter types to make sure the bytecode is generated
+   // correctly for each of them
+   public String getMsg(int param1, long param2, double param3, boolean param4, char param5, float param7, short param8)
+   {
+      return MESSAGE;
    }
    
 }
