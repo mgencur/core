@@ -1,15 +1,17 @@
 package org.jboss.weld.examples.translator;
 
+import java.io.Serializable;
+
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
-import javax.enterprise.context.RequestScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
 @Stateful
-@RequestScoped
+@SessionScoped
 @Named("translator")
-public class TranslatorControllerBean implements TranslatorController
+public class TranslatorControllerBean implements TranslatorController, Serializable
 {
    
    @Inject

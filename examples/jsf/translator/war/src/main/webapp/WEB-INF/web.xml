@@ -8,6 +8,7 @@
    <display-name>Web Beans Numbergues example</display-name>
 
    <!-- JSF -->
+   <distributable/>
 
    <servlet>
       <servlet-name>Faces Servlet</servlet-name>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jboss xmlns="http://www.jboss.com/xml/ns/javaee"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://www.jboss.com/xml/ns/javaee jboss_5_0.xsd"
+   version="5.0">
+   
+   <enterprise-beans>
+      <session>
+         <!-- stateless bean -->
+         <ejb-name>SentenceTranslator</ejb-name>
+         <clustered>true</clustered>
+      </session>
+      <session>
+         <!-- stateful bean -->
+         <ejb-name>TranslatorControllerBean</ejb-name>
+         <clustered>true</clustered>
+      </session>
+   </enterprise-beans>
+</jboss>
